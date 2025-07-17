@@ -16,9 +16,9 @@
 // @license      MIT
 // @include      *://*/*
 // @resource     RULES https://raw.githubusercontent.com/your-repo/ubo-rules/main/latest-rules.json
-// @updateURL    https://raw.githubusercontent.com/your-repo/ubo-enhancer/main/ubo-enhancer.meta.js
-// @downloadURL  https://raw.githubusercontent.com/your-repo/ubo-enhancer/main/ubo-enhancer.user.js
-// @supportURL   https://github.com/your-repo/ubo-enhancer/issues
+// @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-adblock-Killer-Enhanced-Elite-Edition-/refs/heads/main/Anti-Adblock.js
+// @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-adblock-Killer-Enhanced-Elite-Edition-/refs/heads/main/Anti-Adblock.js
+// @supportURL   https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced
 // @icon         https://raw.githubusercontent.com/your-repo/ubo-enhancer/main/icon.png
 // @note         Ctrl+F9: Toggle protection | Ctrl+F10: Force cleanup | Ctrl+F11: Emergency disable
 // ==/UserScript==
