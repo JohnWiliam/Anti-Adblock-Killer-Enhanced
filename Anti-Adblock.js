@@ -299,8 +299,8 @@
                         const filtered = mutations.filter(mutation => {
                             return ![...mutation.addedNodes].some(node => 
                                 node.nodeType === 1 && 
-                                (overlaySelectors.some(sel => node.matches(sel)) &&
-                                aiDetectOverlay(node)
+                                (overlaySelectors.some(sel => node.matches(sel)) ||
+                                aiDetectOverlay(node))
                             );
                         });
                         if (filtered.length) callback(filtered, observer);
@@ -338,26 +338,97 @@
         observer: null,
         mutationCount: 0,
         lastCleanup: 0,
+        observerOptions: {
+            childList: true,
+            subtree: true
+        },
+        aiDetections: 0,
+        removedCount: 0,
         
         init() {
-            // ... (implementação similar à versão anterior, mas com melhorias abaixo) ...
+            if (!config.protectionEnabled) return;
+
+            // Limpeza inicial
+            this.cleanup();
+
+            // Configurar observador
+            this.observer = new MutationObserver((mutations) => {
+                this.mutationCount += mutations.length;
+                let found = false;
+
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && this.isElementAnOverlay(node)) {
+                            this.removeOverlay(node);
+                            found = true;
+                        }
+                    });
+                });
+
+                if (found) {
+                    this.restoreScrolling();
+                }
+            });
+
+            this.startObserving();
             
             // Auto-otimização baseada em performance
             this.optimizeObserver();
         },
         
+        startObserving() {
+            if (this.observer) {
+                this.observer.observe(document.body || document.documentElement, this.observerOptions);
+            }
+        },
+
+        cleanup() {
+             document.querySelectorAll(overlaySelectors.join(', ')).forEach(el => {
+                 this.removeOverlay(el);
+             });
+             this.restoreScrolling();
+        },
+
+        removeOverlay(element) {
+            log(3, 'Removing overlay via observer', element);
+            element.remove();
+            this.removedCount++;
+        },
+
+        restoreScrolling() {
+            if (document.body.style.overflow === 'hidden' || document.documentElement.style.overflow === 'hidden') {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            }
+        },
+
         optimizeObserver() {
             setInterval(() => {
                 const now = Date.now();
-                const rate = this.mutationCount / ((now - this.lastCleanup) / 1000);
+                const elapsed = (now - this.lastCleanup) / 1000;
                 
-                if (rate > 50) { // Mais de 50 mutações/segundo
-                    log(2, `High mutation rate (${rate.toFixed(1)}/s) - throttling observer`);
-                    observerOptions.subtree = false;
-                    observerOptions.childList = true;
-                } else if (rate < 10) {
-                    observerOptions.subtree = true;
-                    observerOptions.childList = true;
+                if (elapsed > 0) {
+                    const rate = this.mutationCount / elapsed;
+                    let changed = false;
+
+                    if (rate > 50) { // Mais de 50 mutações/segundo
+                        if (this.observerOptions.subtree) {
+                            log(2, `High mutation rate (${rate.toFixed(1)}/s) - throttling observer`);
+                            this.observerOptions.subtree = false;
+                            changed = true;
+                        }
+                    } else if (rate < 10) {
+                        if (!this.observerOptions.subtree) {
+                            log(2, `Normal mutation rate (${rate.toFixed(1)}/s) - restoring observer`);
+                            this.observerOptions.subtree = true;
+                            changed = true;
+                        }
+                    }
+
+                    if (changed) {
+                        this.observer.disconnect();
+                        this.startObserving();
+                    }
                 }
                 
                 this.mutationCount = 0;
@@ -366,17 +437,26 @@
         },
         
         isElementAnOverlay(element) {
-            // ... (implementação da versão anterior) ...
+            let foundOverlay = false;
+
+            try {
+                if (element.matches && overlaySelectors.some(sel => element.matches(sel))) {
+                    foundOverlay = true;
+                }
+            } catch (e) {
+                // Ignore invalid selectors
+            }
             
             // Adicionar detecção AI
             if (!foundOverlay) {
                 foundOverlay = aiDetectOverlay(element);
+                if (foundOverlay) {
+                    this.aiDetections++;
+                }
             }
             
             return foundOverlay;
         },
-        
-        // ... (outras funções permanecem similares) ...
     };
 
     // Sistema de sincronização de estado
