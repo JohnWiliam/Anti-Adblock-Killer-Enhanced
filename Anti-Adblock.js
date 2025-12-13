@@ -219,8 +219,57 @@
                     log(2, `Could not neutralize ${flag}`, e);
                 }
             });
-            
-            // ... (restante da função permanece igual à versão anterior) ...
+
+            // Ajuste para flags que devem ser verdadeiras (simulando que anúncios são permitidos)
+            const trueFlags = ['canRunAds', 'isAdsEnabled', 'adsbynetwork'];
+            trueFlags.forEach(flag => {
+                if (detectionFlags.has(flag)) {
+                    try {
+                        Object.defineProperty(window, flag, {
+                            get: () => true,
+                            set: () => {},
+                            configurable: true
+                        });
+                    } catch (e) {
+                        log(2, `Could not set true flag ${flag}`, e);
+                    }
+                }
+            });
+
+            // Ajuste para flags que devem ser funções
+            const funcFlags = ['getAdBlock', 'adblockCheck', 'adblockDetector', 'adBlockDetector'];
+            funcFlags.forEach(flag => {
+                if (detectionFlags.has(flag)) {
+                    try {
+                        Object.defineProperty(window, flag, {
+                            get: () => function() { return false; },
+                            set: () => {},
+                            configurable: true
+                        });
+                    } catch (e) {
+                        log(2, `Could not set function flag ${flag}`, e);
+                    }
+                }
+            });
+
+            // Tratamento especial para adsbygoogle (deve ser um array para evitar erros de .push)
+            if (detectionFlags.has('adsbygoogle')) {
+                try {
+                    const adsbygoogleArr = [];
+                    Object.defineProperty(window, 'adsbygoogle', {
+                        get: () => adsbygoogleArr,
+                        set: (val) => {
+                            if (Array.isArray(val) && val !== adsbygoogleArr) {
+                                adsbygoogleArr.length = 0;
+                                val.forEach(item => adsbygoogleArr.push(item));
+                            }
+                        },
+                        configurable: true
+                    });
+                } catch (e) {
+                    log(2, `Could not handle adsbygoogle`, e);
+                }
+            }
         };
     })();
 
