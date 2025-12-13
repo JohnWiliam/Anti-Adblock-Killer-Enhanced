@@ -234,7 +234,59 @@
         },
         
         protectTimerFunctions() {
-            // ... (implementação otimizada da versão anterior) ...
+            const originalSetTimeout = window.setTimeout;
+            const originalSetInterval = window.setInterval;
+
+            const suspiciousKeywords = [
+                'blockadblock', 'adblockdetected', 'adblockdetector',
+                'canrunads', 'isadblockactive', 'adblockenabled',
+                'blockdetect', 'adsbygoogle', 'google_ad_client',
+                'adblockuser', 'adblocker', 'getadblock', 'adblock',
+                'isadsenabled', 'adsbynetwork', 'adblockerstatus',
+                'adguarddetected', 'adblockbypass', 'addetection',
+                'adblockcheck', 'adblockplus', 'abp'
+            ];
+
+            function isSuspicious(callback) {
+                try {
+                    let str = '';
+                    if (typeof callback === 'function') {
+                        str = callback.toString();
+                    } else if (typeof callback === 'string') {
+                        str = callback;
+                    }
+                    if (!str) return false;
+
+                    str = str.toLowerCase();
+                    return suspiciousKeywords.some(kw => str.includes(kw));
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            window.setTimeout = function(callback, delay, ...args) {
+                if (isSuspicious(callback)) {
+                    log(3, 'Blocked suspicious setTimeout', typeof callback === 'function' ? 'function' : callback.substring(0, 50));
+                    return Math.floor(Math.random() * 10000);
+                }
+                return originalSetTimeout.apply(this, [callback, delay, ...args]);
+            };
+
+            window.setInterval = function(callback, delay, ...args) {
+                if (isSuspicious(callback)) {
+                    log(3, 'Blocked suspicious setInterval', typeof callback === 'function' ? 'function' : callback.substring(0, 50));
+                    return Math.floor(Math.random() * 10000);
+                }
+                return originalSetInterval.apply(this, [callback, delay, ...args]);
+            };
+
+            try {
+                Object.defineProperty(window.setTimeout, 'toString', { value: originalSetTimeout.toString.bind(originalSetTimeout) });
+                Object.defineProperty(window.setInterval, 'toString', { value: originalSetInterval.toString.bind(originalSetInterval) });
+            } catch(e) {
+                window.setTimeout.toString = originalSetTimeout.toString.bind(originalSetTimeout);
+                window.setInterval.toString = originalSetInterval.toString.bind(originalSetInterval);
+            }
         },
         
         protectMutationObserver() {
