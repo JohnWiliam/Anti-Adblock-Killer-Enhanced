@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anti-adblock Killer
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Bypass definitivo de anti-adblock com detecção por IA, capacidades de autorreparação e furtividade adaptativa
 // @author       John Wiliam & IA.
 // @run-at       document-start
