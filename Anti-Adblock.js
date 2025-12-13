@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Anti-adblock Killer Enhancer (Elite Edition)
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Bypass definitivo de anti-adblock com detecção por IA, capacidades de autorreparação e furtividade adaptativa
 // @author       John Wiliam.
 // @run-at       document-start
@@ -18,8 +18,6 @@
 // @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @supportURL   https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced
-// @icon         https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/main/icon.png
-// @icon         https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/icon.png
 // @note         Ctrl+F9: Toggle protection | Ctrl+F10: Force cleanup | Ctrl+F11: Emergency disable
 // ==/UserScript==
 
