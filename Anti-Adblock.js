@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         Anti-adblock Killer Enhancer (Elite Edition)
+// @name         Anti-adblock Killer
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  Bypass definitivo de anti-adblock com detecção por IA, capacidades de autorreparação e furtividade adaptativa
-// @author       John Wiliam.
+// @author       John Wiliam & IA.
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
