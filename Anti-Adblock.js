@@ -15,7 +15,6 @@
 // @grant        GM_removeValueChangeListener
 // @license      MIT
 // @include      *://*/*
-// @resource     RULES https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/latest-rules.json
 // @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @supportURL   https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced
