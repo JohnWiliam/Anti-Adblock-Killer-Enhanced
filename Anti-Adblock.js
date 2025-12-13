@@ -15,11 +15,12 @@
 // @grant        GM_removeValueChangeListener
 // @license      MIT
 // @include      *://*/*
-// @resource     RULES https://raw.githubusercontent.com/your-repo/ubo-rules/main/latest-rules.json
+// @resource     RULES https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/latest-rules.json
 // @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/Anti-Adblock.js
 // @supportURL   https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced
 // @icon         https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/main/icon.png
+// @icon         https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/icon.png
 // @note         Ctrl+F9: Toggle protection | Ctrl+F10: Force cleanup | Ctrl+F11: Emergency disable
 // ==/UserScript==
 
@@ -219,8 +220,57 @@
                     log(2, `Could not neutralize ${flag}`, e);
                 }
             });
-            
-            // ... (restante da função permanece igual à versão anterior) ...
+
+            // Ajuste para flags que devem ser verdadeiras (simulando que anúncios são permitidos)
+            const trueFlags = ['canRunAds', 'isAdsEnabled', 'adsbynetwork'];
+            trueFlags.forEach(flag => {
+                if (detectionFlags.has(flag)) {
+                    try {
+                        Object.defineProperty(window, flag, {
+                            get: () => true,
+                            set: () => {},
+                            configurable: true
+                        });
+                    } catch (e) {
+                        log(2, `Could not set true flag ${flag}`, e);
+                    }
+                }
+            });
+
+            // Ajuste para flags que devem ser funções
+            const funcFlags = ['getAdBlock', 'adblockCheck', 'adblockDetector', 'adBlockDetector'];
+            funcFlags.forEach(flag => {
+                if (detectionFlags.has(flag)) {
+                    try {
+                        Object.defineProperty(window, flag, {
+                            get: () => function() { return false; },
+                            set: () => {},
+                            configurable: true
+                        });
+                    } catch (e) {
+                        log(2, `Could not set function flag ${flag}`, e);
+                    }
+                }
+            });
+
+            // Tratamento especial para adsbygoogle (deve ser um array para evitar erros de .push)
+            if (detectionFlags.has('adsbygoogle')) {
+                try {
+                    const adsbygoogleArr = [];
+                    Object.defineProperty(window, 'adsbygoogle', {
+                        get: () => adsbygoogleArr,
+                        set: (val) => {
+                            if (Array.isArray(val) && val !== adsbygoogleArr) {
+                                adsbygoogleArr.length = 0;
+                                val.forEach(item => adsbygoogleArr.push(item));
+                            }
+                        },
+                        configurable: true
+                    });
+                } catch (e) {
+                    log(2, `Could not handle adsbygoogle`, e);
+                }
+            }
         };
     })();
 
@@ -234,7 +284,59 @@
         },
         
         protectTimerFunctions() {
-            // ... (implementação otimizada da versão anterior) ...
+            const originalSetTimeout = window.setTimeout;
+            const originalSetInterval = window.setInterval;
+
+            const suspiciousKeywords = [
+                'blockadblock', 'adblockdetected', 'adblockdetector',
+                'canrunads', 'isadblockactive', 'adblockenabled',
+                'blockdetect', 'adsbygoogle', 'google_ad_client',
+                'adblockuser', 'adblocker', 'getadblock', 'adblock',
+                'isadsenabled', 'adsbynetwork', 'adblockerstatus',
+                'adguarddetected', 'adblockbypass', 'addetection',
+                'adblockcheck', 'adblockplus', 'abp'
+            ];
+
+            function isSuspicious(callback) {
+                try {
+                    let str = '';
+                    if (typeof callback === 'function') {
+                        str = callback.toString();
+                    } else if (typeof callback === 'string') {
+                        str = callback;
+                    }
+                    if (!str) return false;
+
+                    str = str.toLowerCase();
+                    return suspiciousKeywords.some(kw => str.includes(kw));
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            window.setTimeout = function(callback, delay, ...args) {
+                if (isSuspicious(callback)) {
+                    log(3, 'Blocked suspicious setTimeout', typeof callback === 'function' ? 'function' : callback.substring(0, 50));
+                    return Math.floor(Math.random() * 10000);
+                }
+                return originalSetTimeout.apply(this, [callback, delay, ...args]);
+            };
+
+            window.setInterval = function(callback, delay, ...args) {
+                if (isSuspicious(callback)) {
+                    log(3, 'Blocked suspicious setInterval', typeof callback === 'function' ? 'function' : callback.substring(0, 50));
+                    return Math.floor(Math.random() * 10000);
+                }
+                return originalSetInterval.apply(this, [callback, delay, ...args]);
+            };
+
+            try {
+                Object.defineProperty(window.setTimeout, 'toString', { value: originalSetTimeout.toString.bind(originalSetTimeout) });
+                Object.defineProperty(window.setInterval, 'toString', { value: originalSetInterval.toString.bind(originalSetInterval) });
+            } catch(e) {
+                window.setTimeout.toString = originalSetTimeout.toString.bind(originalSetTimeout);
+                window.setInterval.toString = originalSetInterval.toString.bind(originalSetInterval);
+            }
         },
         
         protectMutationObserver() {
@@ -247,8 +349,8 @@
                         const filtered = mutations.filter(mutation => {
                             return ![...mutation.addedNodes].some(node => 
                                 node.nodeType === 1 && 
-                                (overlaySelectors.some(sel => node.matches(sel)) &&
-                                aiDetectOverlay(node)
+                                (overlaySelectors.some(sel => node.matches(sel)) ||
+                                aiDetectOverlay(node))
                             );
                         });
                         if (filtered.length) callback(filtered, observer);
@@ -286,26 +388,97 @@
         observer: null,
         mutationCount: 0,
         lastCleanup: 0,
+        observerOptions: {
+            childList: true,
+            subtree: true
+        },
+        aiDetections: 0,
+        removedCount: 0,
         
         init() {
-            // ... (implementação similar à versão anterior, mas com melhorias abaixo) ...
+            if (!config.protectionEnabled) return;
+
+            // Limpeza inicial
+            this.cleanup();
+
+            // Configurar observador
+            this.observer = new MutationObserver((mutations) => {
+                this.mutationCount += mutations.length;
+                let found = false;
+
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && this.isElementAnOverlay(node)) {
+                            this.removeOverlay(node);
+                            found = true;
+                        }
+                    });
+                });
+
+                if (found) {
+                    this.restoreScrolling();
+                }
+            });
+
+            this.startObserving();
             
             // Auto-otimização baseada em performance
             this.optimizeObserver();
         },
         
+        startObserving() {
+            if (this.observer) {
+                this.observer.observe(document.body || document.documentElement, this.observerOptions);
+            }
+        },
+
+        cleanup() {
+             document.querySelectorAll(overlaySelectors.join(', ')).forEach(el => {
+                 this.removeOverlay(el);
+             });
+             this.restoreScrolling();
+        },
+
+        removeOverlay(element) {
+            log(3, 'Removing overlay via observer', element);
+            element.remove();
+            this.removedCount++;
+        },
+
+        restoreScrolling() {
+            if (document.body.style.overflow === 'hidden' || document.documentElement.style.overflow === 'hidden') {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            }
+        },
+
         optimizeObserver() {
             setInterval(() => {
                 const now = Date.now();
-                const rate = this.mutationCount / ((now - this.lastCleanup) / 1000);
+                const elapsed = (now - this.lastCleanup) / 1000;
                 
-                if (rate > 50) { // Mais de 50 mutações/segundo
-                    log(2, `High mutation rate (${rate.toFixed(1)}/s) - throttling observer`);
-                    observerOptions.subtree = false;
-                    observerOptions.childList = true;
-                } else if (rate < 10) {
-                    observerOptions.subtree = true;
-                    observerOptions.childList = true;
+                if (elapsed > 0) {
+                    const rate = this.mutationCount / elapsed;
+                    let changed = false;
+
+                    if (rate > 50) { // Mais de 50 mutações/segundo
+                        if (this.observerOptions.subtree) {
+                            log(2, `High mutation rate (${rate.toFixed(1)}/s) - throttling observer`);
+                            this.observerOptions.subtree = false;
+                            changed = true;
+                        }
+                    } else if (rate < 10) {
+                        if (!this.observerOptions.subtree) {
+                            log(2, `Normal mutation rate (${rate.toFixed(1)}/s) - restoring observer`);
+                            this.observerOptions.subtree = true;
+                            changed = true;
+                        }
+                    }
+
+                    if (changed) {
+                        this.observer.disconnect();
+                        this.startObserving();
+                    }
                 }
                 
                 this.mutationCount = 0;
@@ -314,17 +487,26 @@
         },
         
         isElementAnOverlay(element) {
-            // ... (implementação da versão anterior) ...
+            let foundOverlay = false;
+
+            try {
+                if (element.matches && overlaySelectors.some(sel => element.matches(sel))) {
+                    foundOverlay = true;
+                }
+            } catch (e) {
+                // Ignore invalid selectors
+            }
             
             // Adicionar detecção AI
             if (!foundOverlay) {
                 foundOverlay = aiDetectOverlay(element);
+                if (foundOverlay) {
+                    this.aiDetections++;
+                }
             }
             
             return foundOverlay;
         },
-        
-        // ... (outras funções permanecem similares) ...
     };
 
     // Sistema de sincronização de estado
@@ -395,7 +577,7 @@
     GM_registerMenuCommand('Update Rules', () => {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: 'https://raw.githubusercontent.com/your-repo/ubo-rules/main/latest-rules.json',
+            url: 'https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/main/latest-rules.json',
             onload: (res) => {
                 try {
                     const newRules = JSON.parse(res.responseText);
