@@ -2,7 +2,7 @@
 
 [![Install Script](https://img.shields.io/badge/INSTALL_SCRIPT-333333?style=for-the-badge&logo=tampermonkey&logoColor=white&labelColor=2cbe4e)](https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/raw/master/Anti-Adblock.user.js)
 [![License](https://img.shields.io/badge/LICENSE-MIT-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/VERSION-3.0.0-orange?style=for-the-badge)](https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/raw/master/Anti-Adblock.user.js)
+[![Version](https://img.shields.io/badge/VERSION-1.0.1-orange?style=for-the-badge)](https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/raw/master/Anti-Adblock.user.js)
 
 ---
 
