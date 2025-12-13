@@ -15,8 +15,8 @@
 // @grant        GM_removeValueChangeListener
 // @license      MIT
 // @include      *://*/*
-// @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/master/Anti-Adblock.js
-// @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/refs/heads/master/Anti-Adblock.js
+// @updateURL    https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/master/Anti-Adblock.js
+// @downloadURL  https://raw.githubusercontent.com/JohnWiliam/Anti-Adblock-Killer-Enhanced/master/Anti-Adblock.js
 // @supportURL   https://github.com/JohnWiliam/Anti-Adblock-Killer-Enhanced
 // @note         Ctrl+F9: Toggle protection | Ctrl+F10: Force cleanup | Ctrl+F11: Emergency disable
 // ==/UserScript==
